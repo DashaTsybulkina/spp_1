@@ -19,5 +19,10 @@ namespace core.tracer
             methods.Add(method);
         }
 
+        public override string ToString()
+        {
+            return $"{{id: {threadId}, time: {executionTime}, methods: [{string.Join(", ", methods)}]}}";
+        }
+
     }
 }
