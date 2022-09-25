@@ -1,41 +1,51 @@
 ﻿using core.tracer;
+using core.tracer.tracerResult;
 using System.Collections;
+using System.Collections.Concurrent;
+
 using System.Diagnostics;
 
 namespace core.tracers
 {
     public class Tracer: ITracer
     {
-        private double startTime;
-        private double endTime;
-        private TracerResult traceResult;
+        private ConcurrentDictionary<int, ConcurrentStack<MethodTracerResult>> threads;
+
         public Tracer() { 
-            traceResult = new TracerResult();
-            traceResult.methods = new ArrayList();
+            threads = new ConcurrentDictionary<int, ConcurrentStack<MethodTracerResult>>();
         }
 
         public void StartTrace()
-        {   
-            double timesTamp = Stopwatch.GetTimestamp();
-            startTime = 1_000_000_000.0 * timesTamp / Stopwatch.Frequency;
-            
+        {
+            int threedId = Thread.CurrentThread.ManagedThreadId;
+            StackFrame[] stackFrames = new StackTrace(true).GetFrames();
+            var stackFrame = stackFrames[1];
+            ConcurrentStack<MethodTracerResult> stack = threads.GetOrAdd(threedId, new ConcurrentStack<MethodTracerResult>());
+            MethodTracerResult method = new MethodTracerResult(stackFrame.GetMethod().DeclaringType.FullName, stackFrame.GetMethod().Name);
+            stack.Push(method);
+            method.StartTimer();
         }
 
         public void StopTrace()
         {
-            double timesTamp = Stopwatch.GetTimestamp();
-            endTime = 1_000_000_000.0 * timesTamp / Stopwatch.Frequency;
-            traceResult.executionTime = endTime - startTime;
+            var id = Thread.CurrentThread.ManagedThreadId;
+            ConcurrentStack<MethodTracerResult> stack = threads.GetOrAdd(id, new ConcurrentStack<MethodTracerResult>());
+            stack.TryPeek(out var method);
+            method.StopTimer();
         }
 
         public TracerResult GetTraceResult() 
-        { 
-            return traceResult;
-        }
-
-        public void addMethodToResult(MethodTracerResult method)
         {
-            traceResult.addMethod(method);
+            List<TracerThreadResult> results = new List<TracerThreadResult>();
+            foreach (var id in threads.Keys)
+            {
+                TracerThreadResult thread = new TracerThreadResult(id);
+                ConcurrentStack<MethodTracerResult> methods = threads.GetOrAdd(id, new ConcurrentStack<MethodTracerResult>());
+                thread.AddMethods(methods.ToList());
+                results.Add(thread);
+            }
+            TracerResult resultTrace = new TracerResult(results);
+            return resultTrace;
         }
     }
 }

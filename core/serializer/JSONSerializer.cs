@@ -1,14 +1,13 @@
-﻿using Newtonsoft.Json;
+﻿using core.tracer;
+using Newtonsoft.Json;
 
 namespace core.serializer
 {
     public class JSONSerializer :ISerializer
     {
-        public void serialize(TextWriter writer, object data)
+        public string Serialize(TracerResult result)
         {
-            writer.WriteLine(
-                JsonConvert.SerializeObject(data, Formatting.Indented)
-            );
+            return JsonConvert.SerializeObject(result.GetThreads(), Formatting.Indented);
         }
     }
 }

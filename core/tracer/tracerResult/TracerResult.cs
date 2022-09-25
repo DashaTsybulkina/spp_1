@@ -1,4 +1,5 @@
-﻿using System;
+﻿using core.tracer.tracerResult;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
@@ -8,20 +9,18 @@ using System.Threading.Tasks;
 
 namespace core.tracer
 {
+    [Serializable]
     public class TracerResult
     {
-        public long threadId { get;  set; }
-        public double executionTime { get;  set; }
-        public ArrayList methods { get; set; }
+        private List<TracerThreadResult> Threads;
 
-        public void addMethod(MethodTracerResult method)
-        { 
-            methods.Add(method);
+        public TracerResult(List<TracerThreadResult> listThreads){
+            Threads = listThreads;
         }
 
-        public override string ToString()
+        public List<TracerThreadResult> GetThreads()
         {
-            return $"{{id: {threadId}, time: {executionTime}, methods: [{string.Join(", ", methods)}]}}";
+            return Threads;
         }
 
     }
