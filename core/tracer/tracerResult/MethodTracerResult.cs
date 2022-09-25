@@ -1,34 +1,45 @@
-﻿using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Xml.Serialization;
+﻿using System.Diagnostics;
 
 namespace core.tracer
 {
+    [Serializable]
     public class MethodTracerResult
     {
         public string MethodName { get; set; }
-
         public string ClassName { get; set; }
+        public List<MethodTracerResult> Methods { get; set; }
+        public long Time { get; private set; }
+        private Stopwatch Stopwatch { get; }
 
-        public long ExecutionTime { get;  set; }
-        public ArrayList Methods { get; set; }
-
-        public MethodTracerResult()
+        public MethodTracerResult(string ClassName, string MethodName)
         {
-            var method = System.Reflection.MethodBase.GetCurrentMethod();
-            MethodName = method.Name;
-            ClassName = method.DeclaringType.Name;
-            Methods = new ArrayList();
+            Stopwatch = new Stopwatch();
+            this.MethodName = MethodName;
+            this.ClassName = ClassName;
+            this.Methods = new List<MethodTracerResult>();
         }
 
-        public override string ToString()
+        public void AddMethod(MethodTracerResult method)
         {
-            return $"{{name: {MethodName}, class: {ClassName}, time: {ExecutionTime}, methods: [{string.Join(", ", Methods)}]}}";
+            Methods.Add(method);
         }
+
+        public void BalanceTime(long delete)
+        {
+            Time = Time - delete;
+        }
+
+        public void StartTimer()
+        {
+            Stopwatch.Start();
+        }
+
+        public void StopTimer()
+        {
+            Stopwatch.Stop();
+            Time = Stopwatch.ElapsedMilliseconds;
+        }
+
+
     }
 }

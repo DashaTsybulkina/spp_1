@@ -1,4 +1,6 @@
-﻿using System;
+﻿using core.tracer;
+using core.tracer.tracerResult;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -7,12 +9,15 @@ using System.Xml.Serialization;
 
 namespace core.serializer
 {
-    internal class XMLSerializer : ISerializer
+    public class XMLSerializer : XmlSerializer, ISerializer
     {
-        public void serialize(TextWriter stream, object data)
+        public XMLSerializer() { }
+        public string Serialize(TracerResult result)
         {
-            XmlSerializer xmlSerializer = new XmlSerializer(typeof(object));
-            xmlSerializer.Serialize(stream, data);
+            StringWriter stream = new StringWriter();
+            XmlSerializer serializer = new XmlSerializer(typeof(List<TracerThreadResult>));
+            serializer.Serialize(stream, result.GetThreads());
+            return stream.ToString();
         }
     }
 }
