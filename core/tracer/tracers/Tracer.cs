@@ -30,8 +30,16 @@ namespace core.tracers
         {
             var id = Thread.CurrentThread.ManagedThreadId;
             ConcurrentStack<MethodTracerResult> stack = threads.GetOrAdd(id, new ConcurrentStack<MethodTracerResult>());
-            stack.TryPeek(out var method);
+            stack.TryPop(out var method);
             method.StopTimer();
+            if (stack.TryPeek(out var parent))
+            {
+                parent.AddMethod(method);
+            }
+            else
+            {
+                stack.Push(method);
+            }
         }
 
         public TracerResult GetTraceResult() 
